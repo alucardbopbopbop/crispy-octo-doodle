@@ -12,14 +12,14 @@ from langchain.vectorstores import FAISS
 
 os.environ["OPENAI_API_KEY"] = "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"
 
-cities = ["Seattle", "San Francisco"]
+#cities = ["Seattle", "San Francisco"]
 prompt = ""
 
 def clear():
     return None, None, None
 
-
-def pdfsearch(user_text, history, city_inp):
+def pdfsearch(user_text, history):
+#def pdfsearch(user_text, history, city_inp):
     pdf_directory = "/Users/sevancoe/data_sets/test copy"
 
     # if city_inp == "Seattle":
@@ -59,7 +59,7 @@ def pdfsearch(user_text, history, city_inp):
                 chunk_overlap = 200,
                 length_function = len,)
 
-    # pdf_directory = pdf_directory or []
+    #pdf_directory = pdf_directory or []
     pdf_files = [f for f in os.listdir(pdf_directory) if f.endswith('.pdf')]
             
     loaders = [] 
@@ -82,8 +82,8 @@ def pdfsearch(user_text, history, city_inp):
 
     history.append((user_text, answer))
 
-    if pdf_directory == None:
-        history = "Please select a city."
+    # if pdf_directory == None:
+    #     history = "Please select a city."
 
     return history, history, ""
 
@@ -92,10 +92,10 @@ def pdfsearch(user_text, history, city_inp):
 with gr.Blocks(title = "Chat with housing regulations") as block:
     gr.Markdown("## Chat with (INSERT TITLE)")
     with gr.Row():
-        with gr.Column(scale = 1):
-            city_inp = gr.Dropdown(
-                label = "City selection",
-                choices = cities)
+        # with gr.Column(scale = 1):
+        #     city_inp = gr.Dropdown(
+        #         label = "City selection",
+        #         choices = cities)
 
         with gr.Column(scale = 5):
             chatbot = gr.Chatbot()
@@ -103,12 +103,16 @@ with gr.Blocks(title = "Chat with housing regulations") as block:
             state = gr.State()
 
             message.submit(fn = pdfsearch, 
-                           inputs = [message, state, city_inp], 
+                           inputs = [message, state], 
+                            #inputs = [message, state, city_inp], 
+
                            outputs = [chatbot, state, message])
             
             submit = gr.Button("Submit")
             submit.click(fn = pdfsearch, 
-                         inputs = [message, state, city_inp], 
+                         #inputs = [message, state, city_inp], 
+                         inputs = [message, state], 
+
                          outputs = [chatbot, state, message])
             
             clear_btn = gr.Button("Clear chat history")
