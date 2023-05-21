@@ -21,13 +21,6 @@ def clear():
 
 def pdfsearch(user_text, history, city_inp):
     pdf_directory = "/Users/sevancoe/data_sets/test copy"
-
-    # if city_inp == "Seattle":
-    #        pdf_directory = "/Users/sevancoe/data_sets/test copy"
-    # elif city_inp == "San Francisco":
-    #     pdf_directory = "/Users/sevancoe/data_sets/San_Francisco"
-    # else:
-    #     pdf_directory = None
     
     history = history or []
     
@@ -85,6 +78,7 @@ def pdfsearch(user_text, history, city_inp):
     if pdf_directory == None:
         history = "Please select a city."
 
+# dop dop dop
     return history, history, ""
 
 
