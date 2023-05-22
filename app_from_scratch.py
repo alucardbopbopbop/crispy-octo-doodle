@@ -12,23 +12,23 @@ from langchain.vectorstores import FAISS
 
 os.environ["OPENAI_API_KEY"] = "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"
 
-#cities = ["Seattle", "San Francisco"]
+cities = ["Seattle", "San Francisco"]
 prompt = ""
 
 def clear():
     return None, None, None
 
-def pdfsearch(user_text, history):
-#def pdfsearch(user_text, history, city_inp):
-    pdf_directory = "/Users/sevancoe/data_sets/test copy"
+def pdfsearch(user_text, history, city_inp):
+    # def pdfsearch(user_text, history, city_inp):
+    # pdf_directory = "/Users/sevancoe/data_sets/San_Francisco"
+    print(city_inp)
 
-    # if city_inp == "Seattle":
-    #        pdf_directory = "/Users/sevancoe/data_sets/test copy"
-    # elif city_inp == "San Francisco":
-    #     pdf_directory = "/Users/sevancoe/data_sets/San_Francisco"
-    # else:
-    #     pdf_directory = None
-    
+    if city_inp == "Seattle":
+        pdf_directory = "/Users/sevancoe/data_sets/test copy"
+    else:
+        pdf_directory = "/Users/sevancoe/data_sets/San_Francisco"
+
+    print(pdf_directory)
     history = history or []
     
     # history_prompt = the history of the conversation
@@ -49,22 +49,24 @@ def pdfsearch(user_text, history):
     unique_sentences = [sentences[i] for i in sorted(sentence_dict.values())]
     inp = " ".join(unique_sentences)
     
-    # document search and respone generation
+    # document search and response generation
     embeddings = OpenAIEmbeddings() 
-    chain = load_qa_chain(ChatOpenAI(model_name = "gpt-3.5-turbo", temperature = 0.2), chain_type = "stuff")
+    chain = load_qa_chain(ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0.2), chain_type="stuff")
 
     text_splitter = CharacterTextSplitter(        
-                separator = "\n",
-                chunk_size = 1000,
-                chunk_overlap = 200,
-                length_function = len,)
+                separator="\n",
+                chunk_size=1000,
+                chunk_overlap=200,
+                length_function=len,)
 
     #pdf_directory = pdf_directory or []
     pdf_files = [f for f in os.listdir(pdf_directory) if f.endswith('.pdf')]
-            
+
+    file_path = ""
     loaders = [] 
-    for pdf_name in pdf_files: file_path = "{}/{}".format(pdf_directory, pdf_name) 
-    loader = PyPDFLoader(file_path) 
+    for pdf_name in pdf_files:
+        file_path = "{}/{}".format(pdf_directory, pdf_name)
+    loader = PyPDFLoader(file_path)
     loaders.append(loader)
 
     docs = [] 
@@ -78,12 +80,12 @@ def pdfsearch(user_text, history):
             
     query = user_input
     input_documents = docsearch.similarity_search(query) 
-    answer = chain.run(input_documents = input_documents, question = query)
+    answer = chain.run(input_documents=input_documents, question=query)
 
     history.append((user_text, answer))
 
-    # if pdf_directory == None:
-    #     history = "Please select a city."
+    if pdf_directory == None:
+        history = "Please select a city."
 
     return history, history, ""
 
@@ -92,31 +94,29 @@ def pdfsearch(user_text, history):
 with gr.Blocks(title = "Chat with housing regulations") as block:
     gr.Markdown("## Chat with (INSERT TITLE)")
     with gr.Row():
-        # with gr.Column(scale = 1):
-        #     city_inp = gr.Dropdown(
-        #         label = "City selection",
-        #         choices = cities)
+        with gr.Column(scale=1):
+            city_inp = gr.Dropdown(
+                label="City selection",
+                choices=cities)
 
-        with gr.Column(scale = 5):
+        with gr.Column(scale=5):
             chatbot = gr.Chatbot()
-            message = gr.Textbox(placeholder = "type pls", label = "Type your question here:")
+            message = gr.Textbox(placeholder="type pls", label="Type your question here:")
             state = gr.State()
 
-            message.submit(fn = pdfsearch, 
-                           inputs = [message, state], 
-                            #inputs = [message, state, city_inp], 
+            message.submit(fn=pdfsearch,
+                           inputs=[message, state, city_inp],
 
-                           outputs = [chatbot, state, message])
+                           outputs=[chatbot, state, message])
             
             submit = gr.Button("Submit")
-            submit.click(fn = pdfsearch, 
-                         #inputs = [message, state, city_inp], 
-                         inputs = [message, state], 
+            submit.click(fn=pdfsearch,
+                         inputs=[message, state, city_inp],
 
-                         outputs = [chatbot, state, message])
+                         outputs=[chatbot, state, message])
             
             clear_btn = gr.Button("Clear chat history")
-            clear_btn.click(fn = clear, inputs = None, outputs = [chatbot, state, message])
+            clear_btn.click(fn=clear, inputs=None, outputs=[chatbot, state, message])
         
 if __name__ == "__main__":
-    block.launch(debug = True)
+    block.launch(debug=True)
