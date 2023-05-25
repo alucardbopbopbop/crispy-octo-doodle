@@ -13,27 +13,27 @@ from langchain.vectorstores import FAISS
 os.environ["OPENAI_API_KEY"] = "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"
 
 cities = ["Seattle", "San Francisco"]
-prompt = ""
+
+prompt_switch = True
 
 def clear():
     return None, None, None
 
+
 def pdfsearch(user_text, history, city_inp):
-    # def pdfsearch(user_text, history, city_inp):
-    # pdf_directory = "/Users/sevancoe/data_sets/San_Francisco"
-    print(city_inp)
 
     if city_inp == "Seattle":
         pdf_directory = "/Users/sevancoe/data_sets/test copy"
-    else:
+    elif city_inp == "San Francisco":
         pdf_directory = "/Users/sevancoe/data_sets/San_Francisco"
+    else:
+        pdf_directory = None
 
-    print(pdf_directory)
     history = history or []
     
     # history_prompt = the history of the conversation
     history_prompt = list(sum(history, ()))
-    history_prompt.append(f"\nHuman: {user_text}")
+    history_prompt.append(f"\nHuman: {user_text} ")
     inp = " ".join(history_prompt)
 
     # keep the history prompt length limited to ~2000 tokens
@@ -59,8 +59,7 @@ def pdfsearch(user_text, history, city_inp):
                 chunk_overlap=200,
                 length_function=len,)
 
-    #pdf_directory = pdf_directory or []
-    pdf_files = [f for f in os.listdir(pdf_directory) if f.endswith('.pdf')]
+    pdf_files = [file for file in os.listdir(pdf_directory) if file.endswith('.pdf')]
 
     file_path = ""
     loaders = [] 
@@ -76,19 +75,23 @@ def pdfsearch(user_text, history, city_inp):
             
     user_input = f"{inp}"
 
-    #prompt = "The year is 2023. You are an assistant that answers questions about the codes, permits, regulations, policies, and laws of the city of Seattle."      
-            
-    query = user_input
+    if prompt_switch == True:
+        prompt = f"You are an assistant that answers questions about the codes, permits, regulations, policies, " \
+                 f"and laws of the city of {city_inp}."
+    else:
+        prompt = "hi yves c:"
+
+    print(prompt)
+
+    query = prompt + user_input
     input_documents = docsearch.similarity_search(query) 
     answer = chain.run(input_documents=input_documents, question=query)
 
     history.append((user_text, answer))
 
-    if pdf_directory == None:
-        history = "Please select a city."
+    prompt_switch == False
 
     return history, history, ""
-
 
 
 with gr.Blocks(title = "Chat with housing regulations") as block:
@@ -106,17 +109,15 @@ with gr.Blocks(title = "Chat with housing regulations") as block:
 
             message.submit(fn=pdfsearch,
                            inputs=[message, state, city_inp],
-
                            outputs=[chatbot, state, message])
             
             submit = gr.Button("Submit")
             submit.click(fn=pdfsearch,
                          inputs=[message, state, city_inp],
-
                          outputs=[chatbot, state, message])
             
             clear_btn = gr.Button("Clear chat history")
             clear_btn.click(fn=clear, inputs=None, outputs=[chatbot, state, message])
         
 if __name__ == "__main__":
-    block.launch(debug=True)
+    block.launch(debug=True, inbrowser=True)
