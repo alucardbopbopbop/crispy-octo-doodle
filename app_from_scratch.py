@@ -14,18 +14,17 @@ os.environ["OPENAI_API_KEY"] = "sk-pNr3D8EwCvMlY3LzlZhhT3BlbkFJrJMXaLqJvK26ZXYVR
 
 cities = ["Seattle", "San Francisco"]
 
-prompt_switch = True
-
 def clear():
     return None, None, None
-
 
 def pdfsearch(user_text, history, city_inp):
 
     if city_inp == "Seattle":
         pdf_directory = "/Users/sevancoe/data_sets/test copy"
     elif city_inp == "San Francisco":
-        pdf_directory = "/Users/sevancoe/data_sets/San_Francisco"
+        pdf_directory = "/Users/sevancoe/data_sets/test copy 2"
+        #HUH???????????^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        #the duplicate folder works something is fucked up with the sf folder
     else:
         pdf_directory = None
 
@@ -48,12 +47,12 @@ def pdfsearch(user_text, history, city_inp):
 
     unique_sentences = [sentences[i] for i in sorted(sentence_dict.values())]
     inp = " ".join(unique_sentences)
-    
+
     # document search and response generation
-    embeddings = OpenAIEmbeddings() 
+    embeddings = OpenAIEmbeddings()
     chain = load_qa_chain(ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0.2), chain_type="stuff")
 
-    text_splitter = CharacterTextSplitter(        
+    text_splitter = CharacterTextSplitter(
                 separator="\n",
                 chunk_size=1000,
                 chunk_overlap=200,
@@ -62,7 +61,7 @@ def pdfsearch(user_text, history, city_inp):
     pdf_files = [file for file in os.listdir(pdf_directory) if file.endswith('.pdf')]
 
     file_path = ""
-    loaders = [] 
+    loaders = []
     for pdf_name in pdf_files:
         file_path = "{}/{}".format(pdf_directory, pdf_name)
     loader = PyPDFLoader(file_path)
@@ -74,12 +73,8 @@ def pdfsearch(user_text, history, city_inp):
     docsearch = FAISS.from_documents(documents, embeddings)
             
     user_input = f"{inp}"
-
-    if prompt_switch == True:
-        prompt = f"You are an assistant that answers questions about the codes, permits, regulations, policies, " \
-                 f"and laws of the city of {city_inp}."
-    else:
-        prompt = "hi yves c:"
+    #prompt = f"You are an assistant that answers questions about the codes, permits, regulations, policies, and laws of the city of {city_inp}."
+    #print(prompt)
 
     print(prompt)
 
@@ -89,12 +84,10 @@ def pdfsearch(user_text, history, city_inp):
 
     history.append((user_text, answer))
 
-    prompt_switch == False
-
     return history, history, ""
 
 
-with gr.Blocks(title = "Chat with housing regulations") as block:
+with gr.Blocks(title="Chat with housing regulations") as block:
     gr.Markdown("## Chat with (INSERT TITLE)")
     with gr.Row():
         with gr.Column(scale=1):
@@ -102,7 +95,7 @@ with gr.Blocks(title = "Chat with housing regulations") as block:
                 label="City selection",
                 choices=cities)
 
-        with gr.Column(scale=5):
+        with gr.Column(scale=4):
             chatbot = gr.Chatbot()
             message = gr.Textbox(placeholder="type pls", label="Type your question here:")
             state = gr.State()
@@ -110,14 +103,14 @@ with gr.Blocks(title = "Chat with housing regulations") as block:
             message.submit(fn=pdfsearch,
                            inputs=[message, state, city_inp],
                            outputs=[chatbot, state, message])
-            
+
             submit = gr.Button("Submit")
             submit.click(fn=pdfsearch,
                          inputs=[message, state, city_inp],
                          outputs=[chatbot, state, message])
-            
+
             clear_btn = gr.Button("Clear chat history")
             clear_btn.click(fn=clear, inputs=None, outputs=[chatbot, state, message])
-        
+
 if __name__ == "__main__":
     block.launch(debug=True, inbrowser=True)
