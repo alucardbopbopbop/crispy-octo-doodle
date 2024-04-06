@@ -124,67 +124,75 @@ data_input = (f"{org_name} is a {fp_or_np} organization who gets the majority of
               f"they have {employee_count} employees, {fte_count} of which full-time employees and {pte_count} of which "
               f"were part time. Describe the organization's financial health and provide 1 or 2 recommendations for improvement."
               f"Respond professionally in the third person.")
-# print(rent_cost)
 
 print(chat_gpt(f"{data_input}"))
 
-# sample chart creation
-
-# Creating dataset
-cars = ['AUDI', 'BMW', 'FORD',
-        'TESLA', 'JAGUAR', 'MERCEDES']
-
-data = [23, 17, 35, 29, 12, 41]
-
-# Creating plot
-fig = plt.figure(figsize=(10, 7))
-plt.pie(data, labels=cars)
-plt.savefig('chart.png')
+#--------------------------------------------------------------------------------------------------------------------
 
 # Create a PDF file
 self = Canvas("Projecoutput.pdf", pagesize=letter)
 self.showPage()
 self.save()
 
-self.green = Color((45.0 / 255), (166.0 / 255), (153.0 / 255), 1)
-self.blue = Color((54.0 / 255), (122.0 / 255), (179.0 / 255), 1)
+# common things
+green = Color((45.0 / 255), (166.0 / 255), (153.0 / 255), 1)
+blue = Color((54.0 / 255), (122.0 / 255), (179.0 / 255), 1)
+spacer = Spacer(10, 20)
+headerStyle = ParagraphStyle('Hed0', fontSize=12, alignment=TA_LEFT, borderWidth=3, textColor=blue)
+paragraphStyle = ParagraphStyle('Resume', fontSize=9, leading=14, justifyBreaks=1, alignment=TA_LEFT,justifyLastLine=1)
+tableStyle = TableStyle([
+    ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+    ("ALIGN", (1, 0), (1, -1), 'RIGHT'),
+    ('LINEABOVE', (0, 0), (-1, -1), 1, blue),
+    ('BACKGROUND', (0, 0), (-1, 0), green),
+    ('BACKGROUND', (0, -1), (-1, -1), blue),
+    ('SPAN', (0, -1), (-2, -1))
+])
 
+
+# DISPLAY PREP
+# Creating total expense chart
+totalExpensesDataSet = ['Wages', 'Housing coast', 'Expenses', 'Debt']
+totalExpenseData = [{wages}, {housing_cost}, {expenses}, {debt_cost}]
+fig = plt.figure(figsize=(10, 7))
+plt.pie(totalExpenseData, labels=totalExpensesDataSet)
+plt.savefig('totalExpense.png')
+
+# Create PDF
 doc = SimpleDocTemplate("Project_output.pdf", pagesize=letter)
 elements = []
 
-psHeaderText = ParagraphStyle('Hed0', fontSize=12, alignment=TA_LEFT, borderWidth=3,
-                              textColor=self.blue)
-spacer = Spacer(10, 250)
-
+# Title
 text = 'Title of report'
-paragraphReportHeader = Paragraph(text, psHeaderText)
+paragraphReportHeader = Paragraph(text, headerStyle)
 elements.append(paragraphReportHeader)
-elements.append(Spacer(10, 50))
+elements.append(spacer)
 
-img = Image('chart.png', kind='proportional')
+# add total expense image
+img = Image('totalExpense.png', kind='proportional')
 img.drawHeight = 2 * inch
-img.drawWidth = 4 * inch
+img.drawWidth = 2 * inch
 img.hAlign = 'CENTER'
 elements.append(img)
 
+# draw line
 d = Drawing(500, 1)
 line = Line(-15, 0, 483, 0)
-line.strokeColor = self.green
+line.strokeColor = green
 line.strokeWidth = 2
 d.add(line)
 elements.append(d)
 
+# spacer
 elements.append(spacer)
 
-paragraphStyle = ParagraphStyle('Resume', fontSize=9, leading=14, justifyBreaks=1, alignment=TA_LEFT,
-                                justifyLastLine=1)
+# AI output formatted
 bigText = f"""{chat_gpt(f"{data_input}")}"""
 elements.append(Paragraph(bigText, paragraphStyle))
 
 # table example
-psHeaderText = ParagraphStyle('Hed0', fontSize=12, alignment=TA_LEFT, borderWidth=3, textColor=self.blue)
 text = 'Table '
-paragraphReportHeader = Paragraph(text, psHeaderText)
+paragraphReportHeader = Paragraph(text, headerStyle)
 elements.append(paragraphReportHeader)
 elements.append(spacer)
 """
@@ -211,9 +219,7 @@ alignStyle = [ParagraphStyle(name="01", alignment=TA_CENTER),
               ParagraphStyle(name="05", alignment=TA_CENTER)]
 
 for row in range(10):
-    lineData = [str(lineNum), "Miércoles, 11 de diciembre de 2019",
-                "17:30", "19:24", "1:54"]
-    # data.append(lineData)
+    lineData = [str(lineNum), "Miércoles, 11 de diciembre de 2019", "17:30", "19:24", "1:54"]
     columnNumber = 0
     for item in lineData:
         ptext = "<font size='%s'>%s</font>" % (fontSize - 1, item)
@@ -232,15 +238,7 @@ for item in totalRow:
 data.append(formattedLineData)
 
 table = Table(data, colWidths=[50, 200, 80, 80, 80])
-tStyle = TableStyle([  # ('GRID',(0, 0), (-1, -1), 0.5, grey),
-    ('ALIGN', (0, 0), (0, -1), 'LEFT'),
-    ("ALIGN", (1, 0), (1, -1), 'RIGHT'),
-    ('LINEABOVE', (0, 0), (-1, -1), 1, self.blue),
-    ('BACKGROUND', (0, 0), (-1, 0), self.green),
-    ('BACKGROUND', (0, -1), (-1, -1), self.blue),
-    ('SPAN', (0, -1), (-2, -1))
-])
-table.setStyle(tStyle)
+table.setStyle(tableStyle)
 elements.append(table)
 
 doc.build(elements)
