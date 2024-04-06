@@ -12,6 +12,7 @@ from reportlab.lib.colors import Color
 import textwrap
 from matplotlib import pyplot as plt
 import numpy as np
+from datetime import datetime
 
 openai.api_key = "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"
 
@@ -63,6 +64,8 @@ expenses = map[25][1]
 assets = map[26][1]
 debt = map[27][1]
 debt_payment = map[28][1]
+
+todays_date = datetime.today().strftime('%Y-%m-%d')
 
 # equations
 wages = (fte_wages + pte_wages + contractor_wages) * 4
@@ -158,6 +161,13 @@ fig = plt.figure(figsize=(10, 7))
 plt.pie(totalExpenseData, labels=totalExpensesDataSet)
 plt.savefig('totalExpense.png')
 
+# Creating employment chart
+totalSalaryDataSet = ['Full Time', 'Part Time', 'Contactor']
+totalSalaryData = [{fte_wages}, {pte_wages}, {contractor_wages}]
+fig = plt.figure(figsize=(10, 7))
+plt.pie(totalSalaryData, labels=totalSalaryDataSet)
+plt.savefig('totalSalary.png')
+
 # Create PDF
 doc = SimpleDocTemplate("Project_output.pdf", pagesize=letter)
 elements = []
@@ -166,6 +176,12 @@ elements = []
 text = 'Title of report'
 paragraphReportHeader = Paragraph(text, headerStyle)
 elements.append(paragraphReportHeader)
+
+#prep info
+text= "prepared on: (f{todays_date})"
+
+preparedInfo = Paragraph(text, paragraphStyle)
+elements.append(preparedInfo)
 elements.append(spacer)
 
 # add total expense image
