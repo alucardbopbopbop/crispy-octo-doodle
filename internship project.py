@@ -1,8 +1,31 @@
+import openai
+
 import pandas as pd
+from reportlab.pdfgen.canvas import Canvas
+from reportlab.lib.units import inch
+from reportlab.lib.pagesizes import letter
+
+openai.api_key = "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"
+
+# AI recommendations
+def chat_gpt(prompt):
+    try:
+        response = openai.chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant that provides recommendations about an "
+                                              "organization based on the provided information."},
+                {"role": "user", "content": prompt}
+            ]
+        )
+        print(response)  # Print the entire response
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 
 # Read the data from the file
-data = pd.read_excel(io = '/Users/sevancoe/Downloads/Documents/project_form.xlsx')
+data = pd.read_excel(io='/Users/sevancoe/Downloads/Documents/project_form.xlsx')
 
 # Extract the data from the file
 map = data.values
@@ -42,9 +65,9 @@ if mortgage_yn == "No":
     mortgage_cost = 0
 
 if fp_or_np == "For-Profit":
-    org_type_switch = 1
+    org_type_switch = False
 else:
-    org_type_switch = 0
+    org_type_switch = True
 
 if funding_type == "Earned Income":
     funding_type_switch = 1
@@ -60,7 +83,6 @@ else:
 employee_count = fte_count + pte_count
 emp_inc_ratio = rev_fy / employee_count
 
-
 if property_insurance == "No":
     property_insurance_cost = 0
 
@@ -71,5 +93,40 @@ debt_cost = debt_payment * 12
 total_expenses = wages + housing_cost + expenses + debt_cost
 profit = rev_fy - total_expenses
 
-print(rent_cost)
+profitability = ""
 
+if profit < 0:
+    profitability = "not profitable"
+elif profit > 0:
+    profitability = "profitable"
+
+p_l = ""
+if profit < 0:
+    p_l = "loss"
+elif profit > 0:
+    p_l = "profit"
+
+# AI prompt
+data_input = (f"{org_name} is a {fp_or_np} organization who gets the majority of their funding via {funding_type}. The "
+          f"following is a description of the organization provided by"
+          f"the user: '{description}'. The organization has {assets} in assets, and {debt} in debt."
+          f"they pay {wages} in wages, {housing_cost} in housing costs, and {total_expenses} in total expenses per year."
+          f"In the last fiscal year, they had {rev_fy} in revenue, and were {profitability}; making {profit} in {p_l}."
+          f"they have {employee_count} employees, {fte_count} of which full-time employees and {pte_count} of which "
+          f"were part time. Describe the organization's financial health and provide 1 or 2 recommendations for improvement."
+          f"Respond professionally in the third person.")
+# print(rent_cost)
+
+print(chat_gpt(f"{data_input}"))
+
+
+# Create a PDF file
+# canvas = Canvas("Project_output.pdf", pagesize = letter)
+# canvas.setFont("Times-Roman", 12)
+# canvas.drawString(72, 720, f"Analysis prepared for: {org_name}")
+# canvas.drawString(72, 705, "Date prepared: today lmao")
+# canvas.drawString(72, 690, "Date prepared: today lmao")
+
+
+# saves the file to the directory
+# canvas.save()
