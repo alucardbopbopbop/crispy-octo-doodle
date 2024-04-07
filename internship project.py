@@ -13,6 +13,8 @@ import textwrap
 from matplotlib import pyplot as plt
 import numpy as np
 from datetime import datetime
+import math
+
 
 openai.api_key = "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"
 
@@ -65,7 +67,7 @@ assets = map[26][1]
 debt = map[27][1]
 debt_payment = map[28][1]
 
-todays_date = datetime.today().strftime('%Y-%m-%d')
+todays_date = datetime.today().strftime('%m-%d-%Y')
 
 # equations
 wages = (fte_wages + pte_wages + contractor_wages) * 4
@@ -129,20 +131,14 @@ data_input = (f"{org_name} is a {fp_or_np} organization who gets the majority of
               f"Respond professionally in the third person.")
 
 print(chat_gpt(f"{data_input}"))
-
 #--------------------------------------------------------------------------------------------------------------------
-
-# Create a PDF file
-self = Canvas("Projecoutput.pdf", pagesize=letter)
-self.showPage()
-self.save()
-
 # common things
+fontSize = 8
 green = Color((45.0 / 255), (166.0 / 255), (153.0 / 255), 1)
 blue = Color((54.0 / 255), (122.0 / 255), (179.0 / 255), 1)
 spacer = Spacer(10, 20)
-headerStyle = ParagraphStyle('Hed0', fontSize=12, alignment=TA_LEFT, borderWidth=3, textColor=blue)
-paragraphStyle = ParagraphStyle('Resume', fontSize=9, leading=14, justifyBreaks=1, alignment=TA_LEFT,justifyLastLine=1)
+headerStyle = ParagraphStyle('Hed0', fontSize=14, alignment=TA_LEFT, borderWidth=3, textColor=blue)
+paragraphStyle = ParagraphStyle('Resume', fontSize=12, leading=14, justifyBreaks=1, alignment=TA_LEFT,justifyLastLine=1)
 tableStyle = TableStyle([
     ('ALIGN', (0, 0), (0, -1), 'LEFT'),
     ("ALIGN", (1, 0), (1, -1), 'RIGHT'),
@@ -152,44 +148,46 @@ tableStyle = TableStyle([
     ('SPAN', (0, -1), (-2, -1))
 ])
 
-
 # DISPLAY PREP
 # Creating total expense chart
 totalExpensesDataSet = ['Wages', 'Housing coast', 'Expenses', 'Debt']
-totalExpenseData = [{wages}, {housing_cost}, {expenses}, {debt_cost}]
+
+# TODO figure out how to have if NAN? 0 else int
+#wagesInt = int(wages.fillna(0).astype(int))
+# housingInt = getattr(housing_cost,0, int(housing_cost))
+# expensesInt = getattr(expenses, 0, int(expenses))
+# debtInt = getattr(debt_cost, 0, int(debt_cost))
+wagesInt = 2
+housingInt = 8
+expensesInt = 1
+debtInt = 3
+# totalExpenseData = [{wages}, {housing_cost}, {expenses}, {debt_cost}]
+totalExpenseData = [wagesInt, housingInt, expensesInt, debtInt]
 fig = plt.figure(figsize=(10, 7))
 plt.pie(totalExpenseData, labels=totalExpensesDataSet)
 plt.savefig('totalExpense.png')
 
-# Creating employment chart
-totalSalaryDataSet = ['Full Time', 'Part Time', 'Contactor']
-totalSalaryData = [{fte_wages}, {pte_wages}, {contractor_wages}]
-fig = plt.figure(figsize=(10, 7))
-plt.pie(totalSalaryData, labels=totalSalaryDataSet)
-plt.savefig('totalSalary.png')
+# TODO same as above
 
+# Creating employment chart
+# totalSalaryDataSet = ['Full Time', 'Part Time', 'Contactor']
+# totalSalaryData = [{fte_wages}, {pte_wages}, {contractor_wages}]
+# fig = plt.figure(figsize=(10, 7))
+# plt.pie(totalSalaryData, labels=totalSalaryDataSet)
+# plt.savefig('totalSalary.png')
+
+# -----------------------------------------------------------------------------------------------
 # Create PDF
 doc = SimpleDocTemplate("Project_output.pdf", pagesize=letter)
 elements = []
 
 # Title
-text = 'Title of report'
-paragraphReportHeader = Paragraph(text, headerStyle)
-elements.append(paragraphReportHeader)
-
-#prep info
-text= "prepared on: (f{todays_date})"
-
-preparedInfo = Paragraph(text, paragraphStyle)
-elements.append(preparedInfo)
+elements.append(Paragraph('Title of report', headerStyle)) # TODO add title of report
 elements.append(spacer)
-
-# add total expense image
-img = Image('totalExpense.png', kind='proportional')
-img.drawHeight = 2 * inch
-img.drawWidth = 2 * inch
-img.hAlign = 'CENTER'
-elements.append(img)
+elements.append(Paragraph(f"Prepared on: {todays_date}", paragraphStyle))
+elements.append(Paragraph(f"Prepared for: {org_name}", paragraphStyle))
+elements.append(Paragraph("Prepared by: Stephen Evancoe", paragraphStyle))
+elements.append(spacer)
 
 # draw line
 d = Drawing(500, 1)
@@ -199,62 +197,56 @@ line.strokeWidth = 2
 d.add(line)
 elements.append(d)
 
+# add total expense image
+img = Image('totalExpense.png', kind='proportional')
+img.drawHeight = 2 * inch
+img.drawWidth = 3 * inch
+img.hAlign = 'LEFT'
+elements.append(img)
+# TODO for multiple images see https://stackoverflow.com/questions/30227466/combine-several-images-horizontally-with-python for example
+
 # spacer
 elements.append(spacer)
 
-# AI output formatted
-bigText = f"""{chat_gpt(f"{data_input}")}"""
-elements.append(Paragraph(bigText, paragraphStyle))
-
 # table example
-text = 'Table '
-paragraphReportHeader = Paragraph(text, headerStyle)
-elements.append(paragraphReportHeader)
+elements.append(Paragraph('Table Data', headerStyle)) # TODO add title of table
 elements.append(spacer)
 """
 Create the line items
 """
 d = []
-textData = ["col 1", "col 2", "col 3", "col 4", "col 5"]
+textData = ["col 1", "col 2", "col 3", "col 4", "col 5"] # TOD add column names
 
-fontSize = 8
 centered = ParagraphStyle(name="centered", alignment=TA_CENTER)
 for text in textData:
-    ptext = "<font size='%s'><b>%s</b></font>" % (fontSize, text)
-    titlesTable = Paragraph(ptext, centered)
-    d.append(titlesTable)
+    d.append(Paragraph("<font size='%s'><b>%s</b></font>" % (fontSize, text), centered))
 
 data = [d]
 lineNum = 1
 formattedLineData = []
+alignStyle = [ParagraphStyle(name="01", alignment=TA_CENTER), ParagraphStyle(name="02", alignment=TA_CENTER), ParagraphStyle(name="03", alignment=TA_CENTER),
+              ParagraphStyle(name="04", alignment=TA_CENTER), ParagraphStyle(name="05", alignment=TA_CENTER)]
 
-alignStyle = [ParagraphStyle(name="01", alignment=TA_CENTER),
-              ParagraphStyle(name="02", alignment=TA_LEFT),
-              ParagraphStyle(name="03", alignment=TA_CENTER),
-              ParagraphStyle(name="04", alignment=TA_CENTER),
-              ParagraphStyle(name="05", alignment=TA_CENTER)]
-
-for row in range(10):
-    lineData = [str(lineNum), "Miércoles, 11 de diciembre de 2019", "17:30", "19:24", "1:54"]
+for row in range(3):
+    lineData = [str(lineNum), "text 1", "text2", "text3", "text4"] # TODO add data
     columnNumber = 0
     for item in lineData:
-        ptext = "<font size='%s'>%s</font>" % (fontSize - 1, item)
-        p = Paragraph(ptext, alignStyle[columnNumber])
-        formattedLineData.append(p)
+        formattedLineData.append(Paragraph("<font size='%s'>%s</font>" % (fontSize - 1, item), alignStyle[columnNumber]))
         columnNumber = columnNumber + 1
     data.append(formattedLineData)
     formattedLineData = []
 
-# Row for total
-totalRow = ["Total de Horas", "", "", "", "30:15"]
-for item in totalRow:
-    ptext = "<font size='%s'>%s</font>" % (fontSize - 1, item)
-    p = Paragraph(ptext, alignStyle[1])
-    formattedLineData.append(p)
-data.append(formattedLineData)
-
-table = Table(data, colWidths=[50, 200, 80, 80, 80])
+table = Table(data, colWidths=[50, 80, 80, 80, 80])
 table.setStyle(tableStyle)
 elements.append(table)
 
+# AI output formatted
+elements.append(Paragraph('Advice ', headerStyle))
+elements.append(spacer)
+elements.append(Paragraph(f"""{chat_gpt(f"{data_input}")}""", paragraphStyle))
+elements.append(spacer)
+
+elements.append(Paragraph("For questions please reach out to sevancoe@uw.edu", paragraphStyle))
+
 doc.build(elements)
+
