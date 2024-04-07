@@ -15,9 +15,7 @@ import numpy as np
 from datetime import datetime
 import math
 
-
 openai.api_key = "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"
-
 
 # AI recommendations
 def chat_gpt(prompt):
@@ -131,6 +129,8 @@ data_input = (f"{org_name} is a {fp_or_np} organization who gets the majority of
               f"Respond professionally in the third person.")
 
 print(chat_gpt(f"{data_input}"))
+
+
 #--------------------------------------------------------------------------------------------------------------------
 # common things
 fontSize = 8
@@ -196,6 +196,7 @@ line.strokeColor = green
 line.strokeWidth = 2
 d.add(line)
 elements.append(d)
+elements.append(spacer)
 
 # add total expense image
 img = Image('totalExpense.png', kind='proportional')
