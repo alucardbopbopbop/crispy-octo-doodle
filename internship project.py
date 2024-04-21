@@ -1,19 +1,14 @@
 import openai
-
 import pandas as pd
-from reportlab.pdfgen.canvas import Canvas
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import (SimpleDocTemplate, Paragraph, PageBreak, Image, Spacer, Table, TableStyle)
-from reportlab.lib.enums import TA_LEFT, TA_RIGHT, TA_CENTER, TA_JUSTIFY
-from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
-from reportlab.lib.pagesizes import LETTER, inch
-from reportlab.graphics.shapes import Line, LineShape, Drawing
+from reportlab.platypus import (SimpleDocTemplate, Paragraph, Image, Spacer, Table, TableStyle)
+from reportlab.lib.enums import TA_LEFT, TA_CENTER
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.lib.pagesizes import inch
+from reportlab.graphics.shapes import Line, Drawing
 from reportlab.lib.colors import Color
-import textwrap
 from matplotlib import pyplot as plt
-import numpy as np
 from datetime import datetime
-import math
 
 openai.api_key = "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"
 
@@ -60,7 +55,7 @@ mortgage_cost = map[21][1]
 property_insurance = map[22][1]
 property_insurance_cost = map[23][1]
 utilities_cost = map[24][1]
-expenses = map[25][1]
+expenses = map[25][1]*4
 assets = map[26][1]
 debt = map[27][1]
 debt_payment = map[28][1]
@@ -125,20 +120,18 @@ data_input = (f"{org_name} is a {fp_or_np} organization who gets the majority of
               f"they pay {wages} in wages, {housing_cost} in housing costs, and {total_expenses} in total expenses per year."
               f"In the last fiscal year, they had {rev_fy} in revenue, and were {profitability}; making {profit} in {p_l}."
               f"they have {employee_count} employees, {fte_count} of which full-time employees and {pte_count} of which "
-              f"were part time. Describe the organization's financial health and provide 1 or 2 recommendations for improvement."
+              f"were part time. Describe the organization's financial health and provide recommendations for improvement."
               f"Respond professionally in the third person.")
 
 response = (chat_gpt(f"{data_input}"))
-print(response)
 
-#--------------------------------------------------------------------------------------------------------------------
 # common things
 fontSize = 8
 green = Color((45.0 / 255), (166.0 / 255), (153.0 / 255), 1)
 blue = Color((54.0 / 255), (122.0 / 255), (179.0 / 255), 1)
 spacer = Spacer(10, 10)
-headerStyle = ParagraphStyle('Hed0', fontSize=14, alignment=TA_LEFT, borderWidth=3, textColor=blue)
-paragraphStyle = ParagraphStyle('Resume', fontSize=12, leading=14, justifyBreaks=1, alignment=TA_LEFT,justifyLastLine=1)
+headerStyle = ParagraphStyle('Hed0', fontSize = 14, alignment = TA_LEFT, borderWidth = 2, textColor = blue)
+paragraphStyle = ParagraphStyle('Resume', fontSize = 11, leading = 14, justifyBreaks = 1, alignment = TA_LEFT,justifyLastLine = 1)
 tableStyle = TableStyle([
     ('ALIGN', (0, 0), (0, -1), 'LEFT'),
     ("ALIGN", (1, 0), (1, -1), 'RIGHT'),
@@ -150,31 +143,19 @@ tableStyle = TableStyle([
 
 # DISPLAY PREP
 # Creating total expense chart
-totalExpensesDataSet = ['Wages', 'Housing cost', 'Expenses', 'Debt']
-
-# TODO figure out how to have if NAN? 0 else int
+totalExpensesDataSet = ['Wages', 'Housing costs', 'Expenses', 'Debt']
 wagesInt = wages
 housingInt = housing_cost
 expensesInt = expenses
 debtInt = debt_cost
-
 totalExpenseData = [wagesInt, housingInt, expensesInt, debtInt]
-fig = plt.figure(figsize=(12, 9))
-plt.pie(totalExpenseData, labels=totalExpensesDataSet)
+fig = plt.figure(figsize = (12, 9))
+plt.pie(totalExpenseData, labels = totalExpensesDataSet, textprops = {'fontsize': 30}, autopct = '%1.1f%%', startangle = 140)
 plt.savefig('totalExpense.png')
-
-# TODO same as above
-
-#Creating employment chart
-# totalSalaryDataSet = ['Full Time', 'Part Time', 'Contactor']
-# totalSalaryData = [fte_wages, pte_wages, contractor_wages]
-# fig = plt.figure(figsize=(10, 7))
-# plt.pie(totalSalaryData, labels=totalSalaryDataSet)
-# plt.savefig('totalSalary.png')
 
 # -----------------------------------------------------------------------------------------------
 # Create PDF
-doc = SimpleDocTemplate("Project_output.pdf", pagesize=letter)
+doc = SimpleDocTemplate("Project_output.pdf", pagesize = letter)
 elements = []
 
 # Title
@@ -192,54 +173,56 @@ d.add(line)
 elements.append(d)
 elements.append(spacer)
 
-# add total expense image
-img = Image('totalExpense.png', kind='proportional')
-img.drawHeight = 3 * inch
-img.drawWidth = 4 * inch
-img.hAlign = 'LEFT'
-elements.append(Paragraph('Expenses', headerStyle))
-elements.append(img)
-
-# add total expense image
-# img = Image('totalSalary.png', kind='proportional')
-# img.drawHeight = 3 * inch
-# img.drawWidth = 4 * inch
-# img.hAlign = 'LEFT'
-# elements.append(img)
-
-# TODO for multiple images see https://stackoverflow.com/questions/30227466/combine-several-images-horizontally-with-python for example
-
 # table data
-elements.append(Paragraph('Employment Data', headerStyle))
+elements.append(Paragraph('Annual Employment Data', headerStyle))
 elements.append(spacer)
-"""
-Create the line items
-"""
-d = []
-textData = ["Employee Type", "Full Time", "Part Time", "Contractors", "TOTAL"]
+elements.append(spacer)
 
-centered = ParagraphStyle(name="centered", alignment=TA_CENTER)
+d = []
+textData = ["Employment Type", "Full Time", "Part Time", "Contractors", "TOTAL"]
+
+centered = ParagraphStyle(name = "centered", alignment = TA_CENTER)
 for text in textData:
     d.append(Paragraph("<font size='%s'><b>%s</b></font>" % (fontSize, text), centered))
 
 data = [d]
-lineNum = 1
 formattedLineData = []
-alignStyle = [ParagraphStyle(name="01", alignment=TA_CENTER), ParagraphStyle(name="02", alignment=TA_CENTER), ParagraphStyle(name="03", alignment=TA_CENTER),
-              ParagraphStyle(name="04", alignment=TA_CENTER), ParagraphStyle(name="05", alignment=TA_CENTER)]
+alignStyle = [ParagraphStyle(name = "01", alignment = TA_CENTER), ParagraphStyle(name = "02", alignment = TA_CENTER), ParagraphStyle(name = "03", alignment = TA_CENTER),
+              ParagraphStyle(name = "04", alignment = TA_CENTER), ParagraphStyle(name = "05", alignment = TA_CENTER)]
 
-for row in range(3):
-    lineData = [str(lineNum), f"{fte_count}", f"{pte_count}", f"{contractor_count}", f"{employee_count} + "]
-    columnNumber = 0
-    for item in lineData:
-        formattedLineData.append(Paragraph("<font size='%s'>%s</font>" % (fontSize - 1, item), alignStyle[columnNumber]))
-        columnNumber = columnNumber + 1
-    data.append(formattedLineData)
-    formattedLineData = []
+# add row 1 data
+total_count = fte_count + pte_count + contractor_count
+lineData = ["Employed Persons", f"{fte_count}", f"{pte_count}", f"{contractor_count}", f"{total_count}"]
+columnNumber = 0
+for item in lineData:
+    formattedLineData.append(Paragraph("<font size='%s'>%s</font>" % (fontSize - 1, item), alignStyle[columnNumber]))
+    columnNumber = columnNumber + 1
+data.append(formattedLineData)
+formattedLineData = []
 
-table = Table(data, colWidths=[50, 80, 80, 80, 80])
+# add row 2 data
+total_salary = (fte_wages + pte_wages + contractor_wages )*4
+lineData = ["Wages Paid", f"${fte_wages*4}", f"${pte_wages*4}", f"${contractor_wages*4}", f"${total_salary}"]
+columnNumber = 0
+for item in lineData:
+    formattedLineData.append(Paragraph("<font size='%s'>%s</font>" % (fontSize - 1, item), alignStyle[columnNumber]))
+    columnNumber = columnNumber + 1
+data.append(formattedLineData)
+formattedLineData = []
+
+# add row 3 data
+lineData = ["Average wages paid per person", "-", "-", "-", f"${total_salary/total_count}"]
+columnNumber = 0
+for item in lineData:
+    formattedLineData.append(Paragraph("<font size='%s'>%s</font>" % (fontSize - 1, item), alignStyle[columnNumber]))
+    columnNumber = columnNumber + 1
+data.append(formattedLineData)
+formattedLineData = []
+
+table = Table(data, colWidths=[100, 80, 80, 80, 80])
 table.setStyle(tableStyle)
 elements.append(table)
+elements.append(spacer)
 
 # AI output formatted
 elements.append(Paragraph('Advice ', headerStyle))
@@ -247,7 +230,13 @@ elements.append(spacer)
 elements.append(Paragraph(response, paragraphStyle))
 elements.append(spacer)
 
-#elements.append(Paragraph("For questions please reach out to sevancoe@uw.edu", paragraphStyle))
+# add total expense image
+img = Image('totalExpense.png', kind = 'proportional')
+img.drawHeight = 2 * inch
+img.drawWidth = 3 * inch
+img.hAlign = 'LEFT'
+elements.append(Paragraph('Expenses', headerStyle))
+elements.append(spacer)
+elements.append(img)
 
 doc.build(elements)
-
