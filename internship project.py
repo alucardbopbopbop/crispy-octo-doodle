@@ -10,7 +10,7 @@ from reportlab.lib.colors import Color
 from matplotlib import pyplot as plt
 from datetime import datetime
 
-openai.api_key = "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"
+openai.api_key = "api key here"
 
 # AI recommendations
 def chat_gpt(prompt):
@@ -31,6 +31,7 @@ def chat_gpt(prompt):
 
 # Read the data from the file
 data = pd.read_excel(io='/Users/sevancoe/Downloads/Documents/project_form.xlsx')
+#data = pd.read_excel(io='/Users/sevancoe/Downloads/Documents/project_form_alt.xlsx')
 
 # Extract the data from the file
 map = data.values
